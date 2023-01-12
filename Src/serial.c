@@ -677,7 +677,7 @@ const io_stream_t *serial2Init (uint32_t baud_rate)
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
     huart3.Instance = USART3;
-    huart3.Init.BaudRate = 19200;
+    huart3.Init.BaudRate = 115200;
     huart3.Init.WordLength = UART_WORDLENGTH_8B;
     huart3.Init.StopBits = UART_STOPBITS_1;
     huart3.Init.Parity = UART_PARITY_NONE;
@@ -697,9 +697,6 @@ const io_stream_t *serial2Init (uint32_t baud_rate)
         .Alternate = GPIO_AF7_USART3
     };
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-    //serial2SetBaudRate(baud_rate);
-    //serial2SetBaudRate(19200);
 
     HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART3_IRQn);
