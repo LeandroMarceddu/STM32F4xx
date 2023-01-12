@@ -41,18 +41,18 @@
 #define I2C_FASTMODE
 #define EEPROM_ENABLE 2
 #define HAS_IOPORTS
-#if KEYPAD_ENABLE
 #define HAS_BOARD_INIT
-#endif
 
 #if MODBUS_ENABLE
 #define SERIAL2_MOD 3
 #define MODBUS_SERIAL_PORT 2
 #endif
 
-#if MPG_MODE == 1
+#if MPG_ENABLE
 #define MPG_MODE_PORT           GPIOA
 #define MPG_MODE_PIN            15
+#undef MPG_STREAM
+#define MPG_STREAM 1
 #endif
 
 //********on first revision of this board Y step/dir was flipped.  Use below config?

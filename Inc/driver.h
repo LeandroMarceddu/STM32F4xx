@@ -348,7 +348,12 @@
 #define KEYPAD_TEST 0
 #endif
 
-#if MODBUS_TEST + KEYPAD_TEST + MPG_TEST + TRINAMIC_TEST + BLUETOOTH_ENABLE > 1
+
+#if defined(BOARD_FLEXI_HAL)
+#if MODBUS_TEST + KEYPAD_TEST + MPG_TEST + TRINAMIC_TEST + BLUETOOTH_ENABLE > 2
+#error "Only two options that uses the serial port can be enabled!"
+#endif
+#elif MODBUS_TEST + KEYPAD_TEST + MPG_TEST + TRINAMIC_TEST + BLUETOOTH_ENABLE > 1
 #error "Only one option that uses the serial port can be enabled!"
 #endif
 

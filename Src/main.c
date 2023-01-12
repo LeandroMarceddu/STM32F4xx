@@ -32,6 +32,17 @@ static void MX_GPIO_Init (void);
 int main(void)
 {
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+
+    #ifdef HAS_BOOTLOADER
+        HAL_RCC_DeInit();
+        HAL_DeInit();
+        extern uint8_t _FLASH_VectorTable;
+        __disable_irq();
+        SCB->VTOR = (uint32_t)&_FLASH_VectorTable;
+        __DSB();
+        __enable_irq();
+    #endif
+
     HAL_Init();
 
     /* Configure the system clock */
@@ -99,6 +110,25 @@ static void SystemClock_Config(void)
     #define APB1CLKDIV RCC_HCLK_DIV2
     #define APB2CLKDIV RCC_HCLK_DIV1
     #define FLASH_LATENCY FLASH_LATENCY_5
+
+  #elif defined(BOARD_FLEXI_HAL)
+
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+    RCC_OscInitTypeDef RCC_OscInitStruct = {
+        .OscillatorType = RCC_OSCILLATORTYPE_HSE,
+        .HSEState = RCC_HSE_ON,
+        .PLL.PLLState = RCC_PLL_ON,
+        .PLL.PLLSource = RCC_PLLSOURCE_HSE,
+        .PLL.PLLM = 15, // Input clock divider (12MHz crystal) = Base clock 1MHz
+        .PLL.PLLN = 216, // Main clock multiplier
+        .PLL.PLLP = RCC_PLLP_DIV2, // Main clock divider = Main clock 180MHz
+        .PLL.PLLQ = 8, // Special peripheral (USB) clock divider (relative to main clock multiplier) = USB clock 48MHz
+        .PLL.PLLR = 2
+    };
+
+    #define APB1CLKDIV RCC_HCLK_DIV4
+    #define APB2CLKDIV RCC_HCLK_DIV2
+    #define FLASH_LATENCY FLASH_LATENCY_5    
 
   #else
 
@@ -266,11 +296,25 @@ static void SystemClock_Config(void)
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CLK48;
-  PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLQ;
+  #if defined(BOARD_FLEXI_HAL)
+  
+    PeriphClkInitStruct.PLLSAI.PLLSAIM = 25;
+    PeriphClkInitStruct.PLLSAI.PLLSAIN = 192;
+    PeriphClkInitStruct.PLLSAI.PLLSAIQ = 2;
+    PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV4;
+    PeriphClkInitStruct.PLLSAIDivQ = 1;
+    PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
+
+  #else    
+    PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLQ;
+  #endif  
+  
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
+
+  __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
 #endif
 }

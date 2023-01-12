@@ -73,7 +73,7 @@ static enqueue_realtime_command_ptr enqueue_realtime_command2 = protocol_enqueue
 static io_stream_properties_t serial[] = {
     {
       .type = StreamType_Serial,
-      .instance = 0,
+      .instance = 1,
       .flags.claimable = On,
       .flags.claimed = Off,
       .flags.connected = On,
@@ -84,7 +84,7 @@ static io_stream_properties_t serial[] = {
 #ifdef SERIAL2_MOD
     {
       .type = StreamType_Serial,
-      .instance = 1,
+      .instance = 2,
       .flags.claimable = On,
       .flags.claimed = Off,
       .flags.connected = On,
@@ -669,6 +669,61 @@ const io_stream_t *serial2Init (uint32_t baud_rate)
 
 #elif SERIAL2_MOD == 3
 
+#if defined(BOARD_FLEXI_HAL)
+
+    UART_HandleTypeDef huart3;
+
+    __HAL_RCC_USART3_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+
+    huart3.Instance = USART3;
+    huart3.Init.BaudRate = 19200;
+    huart3.Init.WordLength = UART_WORDLENGTH_8B;
+    huart3.Init.StopBits = UART_STOPBITS_1;
+    huart3.Init.Parity = UART_PARITY_NONE;
+    huart3.Init.Mode = UART_MODE_TX_RX;
+    huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+    if (HAL_UART_Init(&huart3) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    GPIO_InitTypeDef GPIO_InitStructure = {
+        .Mode = GPIO_MODE_AF_PP,
+        .Pull = GPIO_NOPULL,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+        .Pin = GPIO_PIN_5|GPIO_PIN_10,
+        .Alternate = GPIO_AF7_USART3
+    };
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    //serial2SetBaudRate(baud_rate);
+    //serial2SetBaudRate(19200);
+
+    HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_IRQn);
+
+    static const periph_pin_t tx = {
+        .function = Output_TX,
+        .group = PinGroup_UART2,
+        .port = GPIOC,
+        .pin = 10,
+        .mode = { .mask = PINMODE_OUTPUT },
+        .description = "UART2"
+    };
+
+    static const periph_pin_t rx = {
+        .function = Input_RX,
+        .group = PinGroup_UART2,
+        .port = GPIOC,
+        .pin = 5,
+        .mode = { .mask = PINMODE_NONE },
+        .description = "UART2"
+    };
+
+#else
+
     __HAL_RCC_USART3_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
@@ -698,7 +753,7 @@ const io_stream_t *serial2Init (uint32_t baud_rate)
         .mode = { .mask = PINMODE_NONE },
         .description = "UART2"
     };
-
+#endif
 #else
 #error Code has to be added to support serial module 2
 #endif
